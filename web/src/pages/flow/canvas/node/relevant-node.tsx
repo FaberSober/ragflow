@@ -1,4 +1,4 @@
-import { useTranslate } from '@/hooks/commonHooks';
+import { useTranslate } from '@/hooks/common-hooks';
 import { Flex } from 'antd';
 import classNames from 'classnames';
 import lowerFirst from 'lodash/lowerFirst';
@@ -19,7 +19,7 @@ export function RelevantNode({ id, data, selected }: NodeProps<NodeData>) {
   return (
     <NodePopover nodeId={id}>
       <section
-        className={classNames(styles.ragNode, {
+        className={classNames(styles.logicNode, {
           [styles.selectedNode]: selected,
         })}
         style={pick(style, ['backgroundColor', 'width', 'height', 'color'])}

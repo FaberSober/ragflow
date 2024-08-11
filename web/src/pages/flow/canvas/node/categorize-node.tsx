@@ -1,4 +1,4 @@
-import { useTranslate } from '@/hooks/commonHooks';
+import { useTranslate } from '@/hooks/common-hooks';
 import { Flex } from 'antd';
 import classNames from 'classnames';
 import { pick } from 'lodash';
@@ -65,7 +65,7 @@ export function CategorizeNode({ id, data, selected }: NodeProps<NodeData>) {
   return (
     <NodePopover nodeId={id}>
       <section
-        className={classNames(styles.ragNode, {
+        className={classNames(styles.logicNode, {
           [styles.selectedNode]: selected,
         })}
         style={{

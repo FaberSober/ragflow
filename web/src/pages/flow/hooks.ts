@@ -1,6 +1,5 @@
-import { useSetModalState } from '@/hooks/commonHooks';
+import { useSetModalState } from '@/hooks/common-hooks';
 import { useFetchFlow, useResetFlow, useSetFlow } from '@/hooks/flow-hooks';
-import { useFetchLlmList } from '@/hooks/llmHooks';
 import { IGraph } from '@/interfaces/database/flow';
 import { useIsFetching } from '@tanstack/react-query';
 import React, {
@@ -18,7 +17,7 @@ import {
   ModelVariableType,
   settledModelVariableMap,
 } from '@/constants/knowledge';
-import { useFetchModelId, useSendMessageWithSse } from '@/hooks/logicHooks';
+import { useFetchModelId, useSendMessageWithSse } from '@/hooks/logic-hooks';
 import { Variable } from '@/interfaces/database/chat';
 import api from '@/utils/api';
 import { useDebounceEffect } from 'ahooks';
@@ -31,16 +30,26 @@ import {
   NodeMap,
   Operator,
   RestrictedUpstreamMap,
+  initialArXivValues,
+  initialBaiduFanyiValues,
   initialBaiduValues,
   initialBeginValues,
+  initialBingValues,
   initialCategorizeValues,
+  initialDeepLValues,
   initialDuckValues,
   initialGenerateValues,
+  initialGithubValues,
+  initialGoogleScholarValues,
+  initialGoogleValues,
   initialKeywordExtractValues,
   initialMessageValues,
+  initialPubMedValues,
+  initialQWeatherValues,
   initialRelevantValues,
   initialRetrievalValues,
   initialRewriteQuestionValues,
+  initialWikipediaValues,
 } from './constant';
 import { ICategorizeForm, IRelevantForm } from './interface';
 import useGraphStore, { RFState } from './store';
@@ -67,7 +76,7 @@ export const useSelectCanvasData = () => {
 };
 
 export const useInitializeOperatorParams = () => {
-  const llmId = useFetchModelId(true);
+  const llmId = useFetchModelId();
 
   const initialFormValuesMap = useMemo(() => {
     return {
@@ -82,9 +91,22 @@ export const useInitializeOperatorParams = () => {
         llm_id: llmId,
       },
       [Operator.Message]: initialMessageValues,
-      [Operator.KeywordExtract]: initialKeywordExtractValues,
+      [Operator.KeywordExtract]: {
+        ...initialKeywordExtractValues,
+        llm_id: llmId,
+      },
       [Operator.DuckDuckGo]: initialDuckValues,
       [Operator.Baidu]: initialBaiduValues,
+      [Operator.Wikipedia]: initialWikipediaValues,
+      [Operator.PubMed]: initialPubMedValues,
+      [Operator.ArXiv]: initialArXivValues,
+      [Operator.Google]: initialGoogleValues,
+      [Operator.Bing]: initialBingValues,
+      [Operator.GoogleScholar]: initialGoogleScholarValues,
+      [Operator.DeepL]: initialDeepLValues,
+      [Operator.GitHub]: initialGithubValues,
+      [Operator.BaiduFanyi]: initialBaiduFanyiValues,
+      [Operator.QWeather]: initialQWeatherValues,
     };
   }, [llmId]);
 
@@ -240,8 +262,22 @@ export const useHandleFormValuesChange = (id?: string) => {
   const updateNodeForm = useGraphStore((state) => state.updateNodeForm);
   const handleValuesChange = useCallback(
     (changedValues: any, values: any) => {
+      let nextValues: any = values;
+      // Fixed the issue that the related form value does not change after selecting the freedom field of the model
+      if (
+        Object.keys(changedValues).length === 1 &&
+        'parameter' in changedValues &&
+        changedValues['parameter'] in settledModelVariableMap
+      ) {
+        nextValues = {
+          ...values,
+          ...settledModelVariableMap[
+            changedValues['parameter'] as keyof typeof settledModelVariableMap
+          ],
+        };
+      }
       if (id) {
-        updateNodeForm(id, values);
+        updateNodeForm(id, nextValues);
       }
     },
     [updateNodeForm, id],
@@ -273,8 +309,6 @@ export const useFetchDataOnMount = () => {
   }, [setGraphInfo, data]);
 
   useWatchGraphChange();
-
-  useFetchLlmList();
 
   useEffect(() => {
     refetch();

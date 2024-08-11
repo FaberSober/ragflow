@@ -1,40 +1,27 @@
 import { MessageType } from '@/constants/chat';
 import { fileIconMap } from '@/constants/common';
 import {
-  useCreateToken,
   useFetchConversation,
   useFetchConversationList,
   useFetchDialog,
   useFetchDialogList,
-  useFetchStats,
-  useListToken,
   useRemoveConversation,
   useRemoveDialog,
-  useRemoveToken,
   useSelectConversationList,
   useSelectDialogList,
-  useSelectStats,
-  useSelectTokenList,
   useSetDialog,
   useUpdateConversation,
-} from '@/hooks/chatHooks';
+} from '@/hooks/chat-hooks';
 import {
   useSetModalState,
   useShowDeleteConfirm,
   useTranslate,
-} from '@/hooks/commonHooks';
-import { useSendMessageWithSse } from '@/hooks/logicHooks';
-import { useOneNamespaceEffectsLoading } from '@/hooks/storeHooks';
-import {
-  IAnswer,
-  IConversation,
-  IDialog,
-  IStats,
-} from '@/interfaces/database/chat';
+} from '@/hooks/common-hooks';
+import { useSendMessageWithSse } from '@/hooks/logic-hooks';
+import { useOneNamespaceEffectsLoading } from '@/hooks/store-hooks';
+import { IAnswer, IConversation, IDialog } from '@/interfaces/database/chat';
 import { IChunk } from '@/interfaces/database/knowledge';
 import { getFileExtension } from '@/utils';
-import { message } from 'antd';
-import dayjs, { Dayjs } from 'dayjs';
 import omit from 'lodash/omit';
 import trim from 'lodash/trim';
 import {
@@ -244,15 +231,20 @@ export const useEditDialog = () => {
     showModal: showDialogEditModal,
   } = useSetModalState();
 
+  const hideModal = useCallback(() => {
+    setDialog({} as IDialog);
+    hideDialogEditModal();
+  }, [hideDialogEditModal]);
+
   const onDialogEditOk = useCallback(
     async (dialog: IDialog) => {
       const ret = await submitDialog(dialog);
 
       if (ret === 0) {
-        hideDialogEditModal();
+        hideModal();
       }
     },
-    [submitDialog, hideDialogEditModal],
+    [submitDialog, hideModal],
   );
 
   const handleShowDialogEditModal = useCallback(
@@ -277,7 +269,7 @@ export const useEditDialog = () => {
     initialDialog: dialog,
     onDialogEditOk,
     dialogEditVisible,
-    hideDialogEditModal,
+    hideDialogEditModal: hideModal,
     showDialogEditModal: handleShowDialogEditModal,
     clearDialog,
   };
@@ -326,7 +318,7 @@ export const useSelectDerivedConversationList = () => {
 
       return pre;
     });
-  }, [conversationList, dialogId, prologue]);
+  }, [conversationList, dialogId, prologue, t]);
 
   useEffect(() => {
     addTemporaryConversation();
@@ -402,7 +394,7 @@ export const useSelectCurrentConversation = () => {
               role: MessageType.Assistant,
               content: answer,
               id: uuid(),
-              reference: [],
+              reference: {},
             } as IMessage,
           ],
         };
@@ -433,7 +425,6 @@ export const useSelectCurrentConversation = () => {
   }, []);
 
   const removeLatestMessage = useCallback(() => {
-    console.info('removeLatestMessage');
     setCurrentConversation((pre) => {
       const nextMessages = pre.message?.slice(0, -2) ?? [];
       return {
@@ -484,7 +475,6 @@ export const useScrollToBottom = (currentConversation: IClientConversation) => {
   const ref = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
-    console.info('useScrollToBottom');
     if (currentConversation.id) {
       ref.current?.scrollIntoView({ behavior: 'instant' });
     }
@@ -554,7 +544,7 @@ export const useSendMessage = (
   const { handleInputChange, value, setValue } = useHandleMessageInputChange();
 
   const { handleClickConversation } = useClickConversationCard();
-  const { send, answer, done } = useSendMessageWithSse();
+  const { send, answer, done, setDone } = useSendMessageWithSse();
 
   const sendMessage = useCallback(
     async (message: string, id?: string) => {
@@ -588,7 +578,6 @@ export const useSendMessage = (
     [
       conversation?.message,
       conversationId,
-      // fetchConversation,
       handleClickConversation,
       removeLatestMessage,
       setValue,
@@ -612,12 +601,18 @@ export const useSendMessage = (
   );
 
   useEffect(() => {
-    if (answer.answer) {
+    //  #1289
+    if (answer.answer && answer?.conversationId === conversationId) {
       addNewestAnswer(answer);
-      console.info('true?');
-      console.info('send msg:', answer.answer);
     }
-  }, [answer, addNewestAnswer]);
+  }, [answer, addNewestAnswer, conversationId]);
+
+  useEffect(() => {
+    // #1289 switch to another conversion window when the last conversion answer doesn't finish.
+    if (conversationId) {
+      setDone(true);
+    }
+  }, [setDone, conversationId]);
 
   const handlePressEnter = useCallback(() => {
     if (trim(value) === '') return;
@@ -639,15 +634,9 @@ export const useSendMessage = (
 };
 
 export const useGetFileIcon = () => {
-  // const req = require.context('@/assets/svg/file-icon');
-  // const ret = req.keys().map(req);
-  // console.info(ret);
-  // useEffect(() => {}, []);
-
   const getFileIcon = (filename: string) => {
     const ext: string = getFileExtension(filename);
     const iconPath = fileIconMap[ext as keyof typeof fileIconMap];
-    // const x = require(`@/assets/svg/file-icon/${iconPath}`);
     return `@/assets/svg/file-icon/${iconPath}`;
   };
 
@@ -770,203 +759,4 @@ export const useGetSendButtonDisabled = () => {
 export const useSendButtonDisabled = (value: string) => {
   return trim(value) === '';
 };
-//#endregion
-
-//#region API provided for external calls
-
-type RangeValue = [Dayjs | null, Dayjs | null] | null;
-
-const getDay = (date: Dayjs) => date.format('YYYY-MM-DD');
-
-export const useFetchStatsOnMount = (visible: boolean) => {
-  const fetchStats = useFetchStats();
-  const [pickerValue, setPickerValue] = useState<RangeValue>([
-    dayjs(),
-    dayjs().subtract(7, 'day'),
-  ]);
-
-  useEffect(() => {
-    if (visible && Array.isArray(pickerValue) && pickerValue[0]) {
-      fetchStats({
-        fromDate: getDay(pickerValue[0]),
-        toDate: getDay(pickerValue[1] ?? dayjs()),
-      });
-    }
-  }, [fetchStats, pickerValue, visible]);
-
-  return {
-    pickerValue,
-    setPickerValue,
-  };
-};
-
-export const useOperateApiKey = (visible: boolean, dialogId: string) => {
-  const removeToken = useRemoveToken();
-  const createToken = useCreateToken(dialogId);
-  const listToken = useListToken();
-  const tokenList = useSelectTokenList();
-  const creatingLoading = useOneNamespaceEffectsLoading('chatModel', [
-    'createToken',
-  ]);
-  const listLoading = useOneNamespaceEffectsLoading('chatModel', ['list']);
-
-  const showDeleteConfirm = useShowDeleteConfirm();
-
-  const onRemoveToken = (token: string, tenantId: string) => {
-    showDeleteConfirm({
-      onOk: () => removeToken({ dialogId, tokens: [token], tenantId }),
-    });
-  };
-
-  useEffect(() => {
-    if (visible && dialogId) {
-      listToken(dialogId);
-    }
-  }, [listToken, dialogId, visible]);
-
-  return {
-    removeToken: onRemoveToken,
-    createToken,
-    tokenList,
-    creatingLoading,
-    listLoading,
-  };
-};
-
-type ChartStatsType = {
-  [k in keyof IStats]: Array<{ xAxis: string; yAxis: number }>;
-};
-
-export const useSelectChartStatsList = (): ChartStatsType => {
-  const stats: IStats = useSelectStats();
-  // const stats = {
-  //   pv: [
-  //     ['2024-06-01', 1],
-  //     ['2024-07-24', 3],
-  //     ['2024-09-01', 10],
-  //   ],
-  //   uv: [
-  //     ['2024-02-01', 0],
-  //     ['2024-03-01', 99],
-  //     ['2024-05-01', 3],
-  //   ],
-  //   speed: [
-  //     ['2024-09-01', 2],
-  //     ['2024-09-01', 3],
-  //   ],
-  //   tokens: [
-  //     ['2024-09-01', 1],
-  //     ['2024-09-01', 3],
-  //   ],
-  //   round: [
-  //     ['2024-09-01', 0],
-  //     ['2024-09-01', 3],
-  //   ],
-  //   thumb_up: [
-  //     ['2024-09-01', 3],
-  //     ['2024-09-01', 9],
-  //   ],
-  // };
-
-  return Object.keys(stats).reduce((pre, cur) => {
-    const item = stats[cur as keyof IStats];
-    if (item.length > 0) {
-      pre[cur as keyof IStats] = item.map((x) => ({
-        xAxis: x[0] as string,
-        yAxis: x[1] as number,
-      }));
-    }
-    return pre;
-  }, {} as ChartStatsType);
-};
-
-export const useShowTokenEmptyError = () => {
-  const [messageApi, contextHolder] = message.useMessage();
-  const { t } = useTranslate('chat');
-
-  const showTokenEmptyError = useCallback(() => {
-    messageApi.error(t('tokenError'));
-  }, [messageApi, t]);
-  return { showTokenEmptyError, contextHolder };
-};
-
-const getUrlWithToken = (token: string) => {
-  const { protocol, host } = window.location;
-  return `${protocol}//${host}/chat/share?shared_id=${token}`;
-};
-
-const useFetchTokenListBeforeOtherStep = (dialogId: string) => {
-  const { showTokenEmptyError, contextHolder } = useShowTokenEmptyError();
-
-  const listToken = useListToken();
-  const tokenList = useSelectTokenList();
-
-  const token =
-    Array.isArray(tokenList) && tokenList.length > 0 ? tokenList[0].token : '';
-
-  const handleOperate = useCallback(async () => {
-    const data = await listToken(dialogId);
-    const list = data.data;
-    if (data.retcode === 0 && Array.isArray(list) && list.length > 0) {
-      return list[0]?.token;
-    } else {
-      showTokenEmptyError();
-      return false;
-    }
-  }, [dialogId, listToken, showTokenEmptyError]);
-
-  return {
-    token,
-    contextHolder,
-    handleOperate,
-  };
-};
-
-export const useShowEmbedModal = (dialogId: string) => {
-  const {
-    visible: embedVisible,
-    hideModal: hideEmbedModal,
-    showModal: showEmbedModal,
-  } = useSetModalState();
-
-  const { handleOperate, token, contextHolder } =
-    useFetchTokenListBeforeOtherStep(dialogId);
-
-  const handleShowEmbedModal = useCallback(async () => {
-    const succeed = await handleOperate();
-    if (succeed) {
-      showEmbedModal();
-    }
-  }, [handleOperate, showEmbedModal]);
-
-  return {
-    showEmbedModal: handleShowEmbedModal,
-    hideEmbedModal,
-    embedVisible,
-    embedToken: token,
-    errorContextHolder: contextHolder,
-  };
-};
-
-export const usePreviewChat = (dialogId: string) => {
-  const { handleOperate, contextHolder } =
-    useFetchTokenListBeforeOtherStep(dialogId);
-
-  const open = useCallback((t: string) => {
-    window.open(getUrlWithToken(t), '_blank');
-  }, []);
-
-  const handlePreview = useCallback(async () => {
-    const token = await handleOperate();
-    if (token) {
-      open(token);
-    }
-  }, [handleOperate, open]);
-
-  return {
-    handlePreview,
-    contextHolder,
-  };
-};
-
 //#endregion
