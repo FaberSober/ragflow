@@ -539,6 +539,8 @@ def list_chunks():
         res = [
             {
                 "content": res_item["content_with_weight"],
+                "position_int": res_item["position_int"],
+                "important_kwd": res_item["important_kwd"],
                 "doc_name": res_item["docnm_kwd"],
                 "img_id": res_item["img_id"]
             } for res_item in res

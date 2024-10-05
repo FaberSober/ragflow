@@ -463,7 +463,7 @@ class Dealer:
             chat_logger.error(f"SQL failure: {sql} =>" + str(e))
             return {"error": str(e)}
 
-    def chunk_list(self, doc_id, tenant_id, max_count=1024, fields=["docnm_kwd", "content_with_weight", "img_id"]):
+    def chunk_list(self, doc_id, tenant_id, max_count=1024, fields=["docnm_kwd", "content_with_weight", "img_id", "important_kwd", "position_int"]):
         s = Search()
         s = s.query(Q("match", doc_id=doc_id))[0:max_count]
         s = s.to_dict()
