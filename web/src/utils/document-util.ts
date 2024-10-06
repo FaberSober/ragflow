@@ -7,6 +7,7 @@ export const buildChunkHighlights = (
   selectedChunk: IChunk,
   size: { width: number; height: number },
 ) => {
+  console.log('buildChunkHighlights.size', size);
   return Array.isArray(selectedChunk?.positions) &&
     selectedChunk.positions.every((x) => Array.isArray(x))
     ? selectedChunk?.positions?.map((x) => {

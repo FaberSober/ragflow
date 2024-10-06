@@ -466,6 +466,15 @@ class Dealer:
     def chunk_list(self, doc_id, tenant_id, max_count=1024, fields=["docnm_kwd", "content_with_weight", "img_id", "important_kwd", "position_int"]):
         s = Search()
         s = s.query(Q("match", doc_id=doc_id))[0:max_count]
+        s = s.sort(
+                    {"page_num_int": {"order": "asc", "unmapped_type": "float",
+                                      "mode": "avg", "numeric_type": "double"}},
+                    {"top_int": {"order": "asc", "unmapped_type": "float",
+                                 "mode": "avg", "numeric_type": "double"}},
+                    #{"create_time": {"order": "desc", "unmapped_type": "date"}},
+                    {"create_timestamp_flt": {
+                        "order": "desc", "unmapped_type": "float"}}
+                )
         s = s.to_dict()
         es_res = self.es.search(s, idxnm=index_name(tenant_id), timeout="600s", src=fields)
         res = []
