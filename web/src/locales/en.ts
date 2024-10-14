@@ -581,6 +581,8 @@ The above is the content you need to summarize.`,
       GoogleRegionMessage: 'Please input Google Cloud Region',
       modelProvidersWarn:
         'Please add both embedding model and LLM in <b>Settings > Model providers</b>  firstly.',
+      apiVersion: 'API-Version',
+      apiVersionMessage: 'Please input API version',
     },
     message: {
       registered: 'Registered!',
@@ -985,6 +987,9 @@ The above is the content you need to summarize.`,
       startDate: 'Start date',
       endDate: 'End date',
       keyword: 'Keyword',
+      note: 'Note',
+      noteDescription: 'Note',
+      notePlaceholder: 'Please enter a note',
     },
     footer: {
       profile: 'All rights reserved @ React',

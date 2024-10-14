@@ -557,6 +557,8 @@ export default {
       GoogleRegionMessage: '请输入 Google Cloud 区域',
       modelProvidersWarn:
         '请首先在 <b>设置 > 模型提供商</b> 中添加嵌入模型和 LLM。',
+      apiVersion: 'API版本',
+      apiVersionMessage: '请输入API版本!',
     },
     message: {
       registered: '注册成功',
@@ -955,6 +957,9 @@ export default {
       startDate: '开始日期',
       endDate: '结束日期',
       keyword: '关键字',
+      note: '注释',
+      noteDescription: '注释',
+      notePlaceholder: '请输入注释',
     },
     footer: {
       profile: 'All rights reserved @ React',
