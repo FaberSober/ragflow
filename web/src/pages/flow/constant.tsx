@@ -2,14 +2,17 @@ import { ReactComponent as AkShareIcon } from '@/assets/svg/akshare.svg';
 import { ReactComponent as ArXivIcon } from '@/assets/svg/arxiv.svg';
 import { ReactComponent as baiduFanyiIcon } from '@/assets/svg/baidu-fanyi.svg';
 import { ReactComponent as BaiduIcon } from '@/assets/svg/baidu.svg';
+import { ReactComponent as BeginIcon } from '@/assets/svg/begin.svg';
 import { ReactComponent as BingIcon } from '@/assets/svg/bing.svg';
 import { ReactComponent as ConcentratorIcon } from '@/assets/svg/concentrator.svg';
+import { ReactComponent as CrawlerIcon } from '@/assets/svg/crawler.svg';
 import { ReactComponent as DeepLIcon } from '@/assets/svg/deepl.svg';
 import { ReactComponent as DuckIcon } from '@/assets/svg/duck.svg';
 import { ReactComponent as ExeSqlIcon } from '@/assets/svg/exesql.svg';
 import { ReactComponent as GithubIcon } from '@/assets/svg/github.svg';
 import { ReactComponent as GoogleScholarIcon } from '@/assets/svg/google-scholar.svg';
 import { ReactComponent as GoogleIcon } from '@/assets/svg/google.svg';
+import { ReactComponent as InvokeIcon } from '@/assets/svg/invoke-ai.svg';
 import { ReactComponent as Jin10Icon } from '@/assets/svg/jin10.svg';
 import { ReactComponent as KeywordIcon } from '@/assets/svg/keyword.svg';
 import { ReactComponent as NoteIcon } from '@/assets/svg/note.svg';
@@ -38,7 +41,6 @@ import {
   MessageOutlined,
   RocketOutlined,
   SendOutlined,
-  SlidersOutlined,
 } from '@ant-design/icons';
 import upperFirst from 'lodash/upperFirst';
 
@@ -73,13 +75,19 @@ export enum Operator {
   Concentrator = 'Concentrator',
   TuShare = 'TuShare',
   Note = 'Note',
+  Crawler = 'Crawler',
+  Invoke = 'Invoke',
 }
+
+export const CommonOperatorList = Object.values(Operator).filter(
+  (x) => x !== Operator.Note,
+);
 
 export const operatorIconMap = {
   [Operator.Retrieval]: RocketOutlined,
   [Operator.Generate]: MergeCellsOutlined,
   [Operator.Answer]: SendOutlined,
-  [Operator.Begin]: SlidersOutlined,
+  [Operator.Begin]: BeginIcon,
   [Operator.Categorize]: DatabaseOutlined,
   [Operator.Message]: MessageOutlined,
   [Operator.Relevant]: BranchesOutlined,
@@ -106,6 +114,8 @@ export const operatorIconMap = {
   [Operator.Concentrator]: ConcentratorIcon,
   [Operator.TuShare]: TuShareIcon,
   [Operator.Note]: NoteIcon,
+  [Operator.Crawler]: CrawlerIcon,
+  [Operator.Invoke]: InvokeIcon,
 };
 
 export const operatorMap: Record<
@@ -135,7 +145,7 @@ export const operatorMap: Record<
   },
   [Operator.Answer]: {
     backgroundColor: '#f4816d',
-    color: 'white',
+    color: '#f4816d',
   },
   [Operator.Begin]: {
     backgroundColor: '#4f51d6',
@@ -150,7 +160,7 @@ export const operatorMap: Record<
   },
   [Operator.Relevant]: {
     backgroundColor: '#9fd94d',
-    color: 'white',
+    color: '#8ef005',
     width: 70,
     height: 70,
     fontSize: 12,
@@ -158,7 +168,7 @@ export const operatorMap: Record<
   },
   [Operator.RewriteQuestion]: {
     backgroundColor: '#f8c7f8',
-    color: 'white',
+    color: '#f32bf3',
     width: 70,
     height: 70,
     fontSize: 12,
@@ -168,7 +178,7 @@ export const operatorMap: Record<
     width: 70,
     height: 70,
     backgroundColor: '#0f0e0f',
-    color: '#e1dcdc',
+    color: '#0f0e0f',
     fontSize: 12,
     iconWidth: 16,
     // iconFontSize: 16,
@@ -214,14 +224,14 @@ export const operatorMap: Record<
   [Operator.BaiduFanyi]: { backgroundColor: '#e5f2d3' },
   [Operator.QWeather]: { backgroundColor: '#a4bbf3' },
   [Operator.ExeSQL]: { backgroundColor: '#b9efe8' },
-  [Operator.Switch]: { backgroundColor: '#dbaff6' },
+  [Operator.Switch]: { backgroundColor: '#dbaff6', color: '#dbaff6' },
   [Operator.WenCai]: { backgroundColor: '#faac5b' },
   [Operator.AkShare]: { backgroundColor: '#8085f5' },
   [Operator.YahooFinance]: { backgroundColor: '#b474ff' },
   [Operator.Jin10]: { backgroundColor: '#a0b9f8' },
   [Operator.Concentrator]: {
     backgroundColor: '#32d2a3',
-    color: 'white',
+    color: '#32d2a3',
     width: 70,
     height: 70,
     fontSize: 10,
@@ -229,6 +239,12 @@ export const operatorMap: Record<
   },
   [Operator.TuShare]: { backgroundColor: '#f8cfa0' },
   [Operator.Note]: { backgroundColor: '#f8cfa0' },
+  [Operator.Crawler]: {
+    backgroundColor: '#dee0e2',
+  },
+  [Operator.Invoke]: {
+    backgroundColor: '#dee0e2',
+  },
 };
 
 export const componentMenuList = [
@@ -319,12 +335,23 @@ export const componentMenuList = [
   {
     name: Operator.TuShare,
   },
+  {
+    name: Operator.Crawler,
+  },
+  {
+    name: Operator.Invoke,
+  },
 ];
+
+const initialQueryBaseValues = {
+  query: [],
+};
 
 export const initialRetrievalValues = {
   similarity_threshold: 0.2,
   keywords_similarity_weight: 0.3,
   top_n: 8,
+  ...initialQueryBaseValues,
 };
 
 export const initialBeginValues = {
@@ -368,6 +395,7 @@ export const initialCategorizeValues = {
   ...initialLlmBaseValues,
   message_history_window_size: 1,
   category_description: {},
+  ...initialQueryBaseValues,
 };
 
 export const initialMessageValues = {
@@ -377,29 +405,35 @@ export const initialMessageValues = {
 export const initialKeywordExtractValues = {
   ...initialLlmBaseValues,
   top_n: 1,
+  ...initialQueryBaseValues,
 };
 export const initialDuckValues = {
   top_n: 10,
   channel: Channel.Text,
+  ...initialQueryBaseValues,
 };
 
 export const initialBaiduValues = {
   top_n: 10,
+  ...initialQueryBaseValues,
 };
 
 export const initialWikipediaValues = {
   top_n: 10,
   language: 'en',
+  ...initialQueryBaseValues,
 };
 
 export const initialPubMedValues = {
   top_n: 10,
   email: '',
+  ...initialQueryBaseValues,
 };
 
 export const initialArXivValues = {
   top_n: 10,
   sort_by: 'relevance',
+  ...initialQueryBaseValues,
 };
 
 export const initialGoogleValues = {
@@ -407,6 +441,7 @@ export const initialGoogleValues = {
   api_key: 'Xxx(get from https://serpapi.com/manage-api-key)',
   country: 'cn',
   language: 'en',
+  ...initialQueryBaseValues,
 };
 
 export const initialBingValues = {
@@ -416,12 +451,14 @@ export const initialBingValues = {
     '"YOUR_ACCESS_KEY"(get from https://www.microsoft.com/en-us/bing/apis/bing-web-search-api)',
   country: 'CH',
   language: 'en',
+  ...initialQueryBaseValues,
 };
 
 export const initialGoogleScholarValues = {
   top_n: 5,
   sort_by: 'relevance',
   patents: true,
+  ...initialQueryBaseValues,
 };
 
 export const initialDeepLValues = {
@@ -431,12 +468,14 @@ export const initialDeepLValues = {
 
 export const initialGithubValues = {
   top_n: 5,
+  ...initialQueryBaseValues,
 };
 
 export const initialBaiduFanyiValues = {
   appid: 'xxx',
   secret_key: 'xxx',
   trans_type: 'translate',
+  ...initialQueryBaseValues,
 };
 
 export const initialQWeatherValues = {
@@ -444,6 +483,7 @@ export const initialQWeatherValues = {
   type: 'weather',
   user_type: 'free',
   time_period: 'now',
+  ...initialQueryBaseValues,
 };
 
 export const initialExeSqlValues = {
@@ -455,13 +495,18 @@ export const initialExeSqlValues = {
   password: '',
   loop: 3,
   top_n: 30,
+  ...initialQueryBaseValues,
 };
 
 export const initialSwitchValues = { conditions: [] };
 
-export const initialWenCaiValues = { top_n: 20, query_type: 'stock' };
+export const initialWenCaiValues = {
+  top_n: 20,
+  query_type: 'stock',
+  ...initialQueryBaseValues,
+};
 
-export const initialAkShareValues = { top_n: 10 };
+export const initialAkShareValues = { top_n: 10, ...initialQueryBaseValues };
 
 export const initialYahooFinanceValues = {
   info: true,
@@ -470,6 +515,7 @@ export const initialYahooFinanceValues = {
   balance_sheet: false,
   cash_flow_statement: false,
   news: true,
+  ...initialQueryBaseValues,
 };
 
 export const initialJin10Values = {
@@ -478,6 +524,7 @@ export const initialJin10Values = {
   flash_type: '1',
   contain: '',
   filter: '',
+  ...initialQueryBaseValues,
 };
 
 export const initialConcentratorValues = {};
@@ -486,10 +533,29 @@ export const initialTuShareValues = {
   token: 'xxx',
   src: 'eastmoney',
   start_date: '2024-01-01 09:00:00',
+  ...initialQueryBaseValues,
 };
 
 export const initialNoteValues = {
   text: '',
+};
+
+export const initialCrawlerValues = {
+  extract_type: 'markdown',
+  ...initialQueryBaseValues,
+};
+
+export const initialInvokeValues = {
+  url: 'http://',
+  method: 'GET',
+  timeout: 60,
+  headers: `{
+  "Accept": "*/*",
+  "Cache-Control": "no-cache",
+  "Connection": "keep-alive"
+}`,
+  proxy: 'http://',
+  clean_html: false,
 };
 
 export const CategorizeAnchorPointPositions = [
@@ -568,18 +634,21 @@ export const RestrictedUpstreamMap = {
   [Operator.Jin10]: [Operator.Begin],
   [Operator.Concentrator]: [Operator.Begin],
   [Operator.TuShare]: [Operator.Begin],
+  [Operator.Crawler]: [Operator.Begin],
+  [Operator.Note]: [],
+  [Operator.Invoke]: [Operator.Begin],
 };
 
 export const NodeMap = {
   [Operator.Begin]: 'beginNode',
   [Operator.Categorize]: 'categorizeNode',
-  [Operator.Retrieval]: 'logicNode',
-  [Operator.Generate]: 'logicNode',
+  [Operator.Retrieval]: 'retrievalNode',
+  [Operator.Generate]: 'generateNode',
   [Operator.Answer]: 'logicNode',
-  [Operator.Message]: 'logicNode',
+  [Operator.Message]: 'messageNode',
   [Operator.Relevant]: 'relevantNode',
-  [Operator.RewriteQuestion]: 'logicNode',
-  [Operator.KeywordExtract]: 'logicNode',
+  [Operator.RewriteQuestion]: 'rewriteNode',
+  [Operator.KeywordExtract]: 'keywordNode',
   [Operator.DuckDuckGo]: 'ragNode',
   [Operator.Baidu]: 'ragNode',
   [Operator.Wikipedia]: 'ragNode',
@@ -593,7 +662,7 @@ export const NodeMap = {
   [Operator.BaiduFanyi]: 'ragNode',
   [Operator.QWeather]: 'ragNode',
   [Operator.ExeSQL]: 'ragNode',
-  [Operator.Switch]: 'categorizeNode',
+  [Operator.Switch]: 'switchNode',
   [Operator.Concentrator]: 'logicNode',
   [Operator.WenCai]: 'ragNode',
   [Operator.AkShare]: 'ragNode',
@@ -601,6 +670,8 @@ export const NodeMap = {
   [Operator.Jin10]: 'ragNode',
   [Operator.TuShare]: 'ragNode',
   [Operator.Note]: 'noteNode',
+  [Operator.Crawler]: 'ragNode',
+  [Operator.Invoke]: 'invokeNode',
 };
 
 export const LanguageOptions = [
@@ -2787,3 +2858,4 @@ export const TuShareSrcOptions = [
   'fenghuang',
   'jinrongjie',
 ];
+export const CrawlerResultOptions = ['markdown', 'html', 'content'];
